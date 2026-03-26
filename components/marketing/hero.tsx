@@ -1,37 +1,31 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Heart, Trophy, TrendingUp } from "lucide-react"
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { ArrowRight, Heart, Trophy, TrendingUp } from 'lucide-react'
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pt-24 pb-16 sm:pt-32 sm:pb-24">
-      {/* Background gradient */}
+    <section className="relative overflow-hidden py-16 sm:py-24">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(200,170,100,0.15),transparent)]" />
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          {/* Badge */}
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
             <Heart className="h-4 w-4" />
             <span>Over $2.5M donated to charity</span>
           </div>
 
-          {/* Headline */}
           <h1 className="text-balance font-serif text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-            Play Golf.{" "}
-            <span className="text-primary">Win Big.</span>{" "}
+            Play Golf.{' '}
+            <span className="text-primary">Win Big.</span>{' '}
             <span className="text-secondary">Give Back.</span>
           </h1>
 
-          {/* Subheadline */}
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground sm:text-xl">
-            Join thousands of golfers who are transforming their rounds into real impact. 
-            Track your scores, enter monthly prize draws, and support the charities you care about.
+            Join thousands of golfers who are transforming their rounds into real impact. Track your scores, enter monthly prize draws, and support the charities you care about.
           </p>
 
-          {/* CTAs */}
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Button size="lg" className="gap-2 text-base" asChild>
               <Link href="/auth/sign-up">
@@ -44,7 +38,6 @@ export function Hero() {
             </Button>
           </div>
 
-          {/* Social proof */}
           <div className="mt-12 flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
             <div className="flex -space-x-3">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -63,7 +56,6 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3">
           <StatCard
             icon={<Trophy className="h-6 w-6 text-primary" />}
