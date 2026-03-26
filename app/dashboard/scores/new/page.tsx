@@ -16,11 +16,7 @@ export default function NewScorePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    courseName: "",
-    playedAt: new Date().toISOString().split("T")[0],
     grossScore: "",
-    courseRating: "",
-    slopeRating: "",
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -34,12 +30,11 @@ export default function NewScorePage() {
 
     // Validation
     const newErrors: Record<string, string> = {}
-    if (!formData.courseName) newErrors.courseName = "Course name is required"
-    if (!formData.playedAt) newErrors.playedAt = "Date is required"
-    if (!formData.grossScore) newErrors.grossScore = "Score is required"
-    const grossScore = parseInt(formData.grossScore)
-    if (isNaN(grossScore) || grossScore < 50 || grossScore > 150) {
-      newErrors.grossScore = "Enter a valid score (50-150)"
+    const score = parseInt(formData.grossScore)
+    if (!formData.grossScore) {
+      newErrors.grossScore = "Score is required"
+    } else if (isNaN(score) || score < 1 || score > 45) {
+      newErrors.grossScore = "Score must be between 1 and 45"
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -49,44 +44,21 @@ export default function NewScorePage() {
 
     setLoading(true)
 
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      toast.error("You must be logged in")
-      setLoading(false)
-      return
-    }
+    try {
+      const { addGolfScore } = await import("@/app/actions/scores")
+      const result = await addGolfScore(score)
 
-    // Calculate handicap differential if course data provided
-    let handicapDifferential = null
-    const courseRating = parseFloat(formData.courseRating)
-    const slopeRating = parseFloat(formData.slopeRating)
-    if (!isNaN(courseRating) && !isNaN(slopeRating) && slopeRating > 0) {
-      handicapDifferential = ((grossScore - courseRating) * 113) / slopeRating
-    }
-
-    const { error } = await supabase.from("golf_scores").insert({
-      user_id: user.id,
-      course_name: formData.courseName,
-      played_at: formData.playedAt,
-      gross_score: grossScore,
-      course_rating: isNaN(courseRating) ? null : courseRating,
-      slope_rating: isNaN(slopeRating) ? null : slopeRating,
-      handicap_differential: handicapDifferential,
-    })
-
-    if (error) {
+      toast.success(`Score logged! Rolling average: ${result.rollingAverage}`, {
+        description: `Total scores on file: ${result.totalScoresOnFile}`,
+      })
+      router.push("/dashboard/scores")
+      router.refresh()
+    } catch (error) {
       setLoading(false)
       toast.error("Failed to save score", {
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
       })
-      return
     }
-
-    toast.success("Round logged successfully!")
-    router.push("/dashboard/scores")
-    router.refresh()
   }
 
   return (
@@ -108,82 +80,30 @@ export default function NewScorePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="rounded-lg border border-border/50 bg-card/50 p-4 mb-6">
+              <p className="text-sm text-muted-foreground">
+                <strong>Rolling Score Logic:</strong> Enter scores 1-45. Your 5 most recent count toward your rolling average. When you add a 6th score, the oldest automatically rolls out.
+              </p>
+            </div>
+
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="courseName">Course Name</FieldLabel>
-                <Input
-                  id="courseName"
-                  name="courseName"
-                  placeholder="Pebble Beach Golf Links"
-                  value={formData.courseName}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-                {errors.courseName && <FieldError>{errors.courseName}</FieldError>}
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="playedAt">Date Played</FieldLabel>
-                <Input
-                  id="playedAt"
-                  name="playedAt"
-                  type="date"
-                  value={formData.playedAt}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-                {errors.playedAt && <FieldError>{errors.playedAt}</FieldError>}
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="grossScore">Gross Score</FieldLabel>
+                <FieldLabel htmlFor="grossScore">Enter Your Score (1-45)</FieldLabel>
                 <Input
                   id="grossScore"
                   name="grossScore"
                   type="number"
-                  placeholder="85"
-                  min="50"
-                  max="150"
+                  placeholder="Enter score"
+                  min="1"
+                  max="45"
                   value={formData.grossScore}
                   onChange={handleChange}
                   disabled={loading}
+                  autoFocus
+                  className="text-center text-2xl"
                 />
                 {errors.grossScore && <FieldError>{errors.grossScore}</FieldError>}
               </Field>
-
-              <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
-                <p className="mb-3 text-sm font-medium">Optional: Course Details</p>
-                <p className="mb-4 text-xs text-muted-foreground">
-                  Add course rating and slope to calculate your handicap differential
-                </p>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field>
-                    <FieldLabel htmlFor="courseRating">Course Rating</FieldLabel>
-                    <Input
-                      id="courseRating"
-                      name="courseRating"
-                      type="number"
-                      step="0.1"
-                      placeholder="72.5"
-                      value={formData.courseRating}
-                      onChange={handleChange}
-                      disabled={loading}
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="slopeRating">Slope Rating</FieldLabel>
-                    <Input
-                      id="slopeRating"
-                      name="slopeRating"
-                      type="number"
-                      placeholder="135"
-                      value={formData.slopeRating}
-                      onChange={handleChange}
-                      disabled={loading}
-                    />
-                  </Field>
-                </div>
-              </div>
             </FieldGroup>
           </CardContent>
           <CardFooter className="flex gap-3">
@@ -192,7 +112,7 @@ export default function NewScorePage() {
             </Button>
             <Button type="submit" className="flex-1" disabled={loading}>
               {loading ? <Spinner className="mr-2" /> : null}
-              {loading ? "Saving..." : "Save Round"}
+              {loading ? "Logging..." : "Log Score"}
             </Button>
           </CardFooter>
         </form>
